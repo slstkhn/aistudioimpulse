@@ -1,0 +1,2317 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ИМПУЛЬС — Neurostudio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@300;400;500&family=Inter+Tight:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================
+     RESET & ROOT
+     ============================================ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root,
+  [data-theme="dark"] {
+    --bg: #0a0a0a;
+    --bg-elev: #111111;
+    --bg-elev-2: #1a1a1a;
+    --ink: #f4f0e8;
+    --ink-dim: #a8a29a;
+    --ink-faint: #6b6660;
+    --accent: #e8452c;
+    --accent-soft: #f5a08c;
+    --line: rgba(244, 240, 232, 0.08);
+    --line-bright: rgba(244, 240, 232, 0.2);
+    --nav-bg: rgba(10, 10, 10, 0.6);
+    --filter-bg: rgba(10, 10, 10, 0.85);
+    --grain-opacity: 0.04;
+    --grain-blend: overlay;
+    --font-display: 'Fraunces', 'Times New Roman', serif;
+    --font-body: 'Inter Tight', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  [data-theme="light"] {
+    --bg: #f4f0e8;
+    --bg-elev: #eae4d8;
+    --bg-elev-2: #e0d8c8;
+    --ink: #1a1410;
+    --ink-dim: #5a5248;
+    --ink-faint: #8a8278;
+    --accent: #c93820;
+    --accent-soft: #a84520;
+    --line: rgba(26, 20, 16, 0.1);
+    --line-bright: rgba(26, 20, 16, 0.2);
+    --nav-bg: rgba(244, 240, 232, 0.75);
+    --filter-bg: rgba(244, 240, 232, 0.9);
+    --grain-opacity: 0.06;
+    --grain-blend: multiply;
+  }
+
+  html, body, .nav, .page, section, .filter-bar, .hero-orb, footer, .work-visual, .project-tile-visual,
+  .btn-primary, .btn-primary::before, .service, .service::before, .tool-chip, .form-input, .form-textarea,
+  .tag-check, .form-submit, .contact-form, .lang-switch, .lang-btn, .theme-toggle, .loader {
+    transition-property: background-color, color, border-color, box-shadow;
+    transition-duration: 0.5s;
+    transition-timing-function: var(--ease-out);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-weight: 300;
+    line-height: 1.5;
+    overflow-x: hidden;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Subtle grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: var(--grain-opacity);
+    mix-blend-mode: var(--grain-blend);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  a { color: inherit; text-decoration: none; }
+  button { background: none; border: none; color: inherit; font: inherit; cursor: pointer; }
+  img { max-width: 100%; display: block; }
+
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  /* ============================================
+     LOADER
+     ============================================ */
+  .loader {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.6s var(--ease-out), visibility 0.6s;
+  }
+  .loader.hidden { opacity: 0; visibility: hidden; }
+  .loader-mark {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    opacity: 0;
+    animation: loaderPulse 1.2s var(--ease-out) forwards;
+  }
+  @keyframes loaderPulse {
+    0% { opacity: 0; transform: translateY(10px); }
+    40% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============================================
+     NAV
+     ============================================ */
+  .nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.75rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: var(--nav-bg);
+    border-bottom: 1px solid var(--line);
+    transition: transform 0.4s var(--ease-out), background-color 0.5s var(--ease-out);
+  }
+
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .nav-logo .dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.6; }
+  }
+
+  .nav-menu {
+    display: flex;
+    gap: 2.5rem;
+    align-items: center;
+    list-style: none;
+  }
+  .nav-link {
+    font-size: 0.82rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    position: relative;
+    padding: 0.25rem 0;
+    transition: color 0.3s var(--ease-out);
+    color: var(--ink-dim);
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 100%;
+    bottom: -4px;
+    height: 1px;
+    background: var(--accent);
+    transition: right 0.4s var(--ease-out);
+  }
+  .nav-link:hover,
+  .nav-link.active { color: var(--ink); }
+  .nav-link:hover::after,
+  .nav-link.active::after { right: 0; }
+  .nav-link .num {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--ink-faint);
+    margin-right: 0.4rem;
+    vertical-align: super;
+  }
+
+  .nav-right {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  .lang-switch {
+    display: flex;
+    gap: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    border: 1px solid var(--line-bright);
+    border-radius: 100px;
+    padding: 3px;
+  }
+  .lang-btn {
+    padding: 0.3rem 0.75rem;
+    border-radius: 100px;
+    color: var(--ink-dim);
+    transition: all 0.3s var(--ease-out);
+    letter-spacing: 0.05em;
+  }
+  .lang-btn.active {
+    background: var(--ink);
+    color: var(--bg);
+  }
+
+  .theme-toggle {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--line-bright);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s var(--ease-out), transform 0.4s var(--ease-out);
+  }
+  .theme-toggle:hover {
+    border-color: var(--ink-faint);
+    transform: rotate(-15deg);
+  }
+  .theme-toggle svg {
+    width: 16px;
+    height: 16px;
+    color: var(--ink);
+    position: absolute;
+    transition: transform 0.5s var(--ease-out), opacity 0.4s var(--ease-out);
+  }
+  .theme-toggle .icon-moon {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+  .theme-toggle .icon-sun {
+    opacity: 0;
+    transform: rotate(180deg) scale(0.4);
+  }
+  [data-theme="light"] .theme-toggle .icon-moon {
+    opacity: 0;
+    transform: rotate(-180deg) scale(0.4);
+  }
+  [data-theme="light"] .theme-toggle .icon-sun {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    padding: 0.5rem;
+  }
+  .menu-toggle span {
+    display: block;
+    width: 24px; height: 1.5px;
+    background: var(--ink);
+    transition: all 0.3s var(--ease-out);
+  }
+
+  /* ============================================
+     PAGE SYSTEM
+     ============================================ */
+  .page {
+    display: none;
+    min-height: 100vh;
+    padding-top: 5rem;
+    animation: pageIn 0.7s var(--ease-out);
+  }
+  .page.active { display: block; }
+  @keyframes pageIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============================================
+     HERO (HOME)
+     ============================================ */
+  .hero {
+    min-height: calc(100vh - 5rem);
+    padding: 4rem 2.5rem 6rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: end;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.8s var(--ease-out) 0.3s forwards;
+  }
+  .hero-label::before {
+    content: '';
+    width: 40px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(4rem, 13vw, 11rem);
+    font-weight: 300;
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.5rem;
+  }
+  .hero-title .line {
+    display: block;
+    overflow: hidden;
+  }
+  .hero-title .word {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(110%);
+    animation: wordReveal 1s var(--ease-out) forwards;
+  }
+  .hero-title .word:nth-child(1) { animation-delay: 0.4s; }
+  .hero-title .word:nth-child(2) { animation-delay: 0.55s; }
+  .hero-title .italic {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--accent-soft);
+  }
+  @keyframes wordReveal {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-desc {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--ink-dim);
+    max-width: 32rem;
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s var(--ease-out) 0.9s forwards;
+  }
+  .hero-desc em {
+    font-family: var(--font-display);
+    font-style: italic;
+    color: var(--ink);
+    font-size: 1.15em;
+  }
+
+  .hero-cta-row {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.8s var(--ease-out) 1.1s forwards;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.75rem;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: all 0.4s var(--ease-out);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform: translateY(100%);
+    transition: transform 0.4s var(--ease-out);
+  }
+  .btn-primary span { position: relative; z-index: 1; }
+  .btn-primary:hover { color: var(--ink); }
+  .btn-primary:hover::before { transform: translateY(0); }
+  .btn-primary .arrow {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.4s var(--ease-out);
+  }
+  .btn-primary:hover .arrow { transform: translateX(4px); }
+
+  .btn-ghost {
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    padding: 1rem 0;
+    position: relative;
+    transition: color 0.3s;
+  }
+  .btn-ghost:hover { color: var(--ink); }
+  .btn-ghost::after {
+    content: '';
+    position: absolute;
+    bottom: 0.75rem; left: 0;
+    width: 100%; height: 1px;
+    background: var(--ink-faint);
+    transform-origin: right;
+    transition: transform 0.4s var(--ease-out);
+  }
+  .btn-ghost:hover::after {
+    transform-origin: left;
+    transform: scaleX(1);
+  }
+
+  .hero-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: flex-end;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0;
+    animation: fadeUp 0.8s var(--ease-out) 1.3s forwards;
+  }
+  .hero-meta-block {
+    text-align: right;
+    padding-right: 1rem;
+    border-right: 1px solid var(--line-bright);
+  }
+  .hero-meta-block strong {
+    display: block;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 2.2rem;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 0.4rem;
+    letter-spacing: -0.02em;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Hero decorative elements */
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .hero-orb {
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, rgba(232, 69, 44, 0.12), transparent 70%);
+    filter: blur(40px);
+    top: -200px; right: -200px;
+    animation: orbFloat 20s ease-in-out infinite;
+  }
+  @keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-50px, 30px) scale(1.1); }
+  }
+
+  .ticker {
+    position: absolute;
+    bottom: 2rem;
+    left: 0; right: 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 0.9rem 0;
+    overflow: hidden;
+    white-space: nowrap;
+    background: var(--nav-bg);
+  }
+  .ticker-track {
+    display: inline-block;
+    animation: ticker 40s linear infinite;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 300;
+  }
+  .ticker-track span {
+    margin-right: 3rem;
+    color: var(--ink-dim);
+  }
+  .ticker-track span em {
+    font-style: italic;
+    color: var(--accent-soft);
+  }
+  .ticker-track .star {
+    color: var(--accent);
+    margin-right: 3rem;
+  }
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* ============================================
+     SECTION
+     ============================================ */
+  section {
+    padding: 7rem 2.5rem;
+    position: relative;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 4rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .section-label::before {
+    content: counter(section, decimal-leading-zero) ' —';
+    counter-increment: section;
+    color: var(--accent);
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 300;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+  .section-title em {
+    font-style: italic;
+    color: var(--accent-soft);
+  }
+
+  body { counter-reset: section; }
+
+  /* ============================================
+     SERVICES
+     ============================================ */
+  .services {
+    background: var(--bg);
+  }
+
+  .services-list {
+    display: flex;
+    flex-direction: column;
+  }
+  .service {
+    display: grid;
+    grid-template-columns: 60px 1fr 3fr 1fr;
+    gap: 2rem;
+    align-items: center;
+    padding: 2.5rem 0;
+    border-top: 1px solid var(--line);
+    cursor: pointer;
+    transition: background 0.4s var(--ease-out);
+    position: relative;
+  }
+  .service:last-child { border-bottom: 1px solid var(--line); }
+  .service::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(232, 69, 44, 0.03), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .service:hover::before { opacity: 1; }
+
+  .service-num {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+  }
+  .service-name {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    transition: transform 0.4s var(--ease-out);
+  }
+  .service-name em {
+    font-style: italic;
+    color: var(--accent-soft);
+  }
+  .service:hover .service-name {
+    transform: translateX(12px);
+  }
+  .service-desc {
+    font-size: 0.95rem;
+    color: var(--ink-dim);
+    max-width: 32rem;
+  }
+  .service-arrow {
+    justify-self: end;
+    font-size: 1.5rem;
+    color: var(--ink-faint);
+    transition: all 0.4s var(--ease-out);
+  }
+  .service:hover .service-arrow {
+    color: var(--accent);
+    transform: rotate(-45deg);
+  }
+
+  /* ============================================
+     FEATURED WORKS
+     ============================================ */
+  .works {
+    background: var(--bg-elev);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .works-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+  }
+
+  .work-card {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .work-card:nth-child(2) { transform: translateY(4rem); }
+
+  .work-visual {
+    aspect-ratio: 4/5;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 1.5rem;
+    background: var(--bg-elev-2);
+  }
+  .work-card:nth-child(2) .work-visual { aspect-ratio: 4/3; }
+
+  .work-visual-inner {
+    width: 100%; height: 100%;
+    transition: transform 1.2s var(--ease-out);
+  }
+  .work-card:hover .work-visual-inner { transform: scale(1.05); }
+
+  .work-visual-inner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.4));
+    z-index: 2;
+  }
+
+  .work-visual svg {
+    width: 100%; height: 100%;
+  }
+
+  .work-tag {
+    position: absolute;
+    top: 1.25rem; left: 1.25rem;
+    z-index: 3;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ink);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.75rem;
+    background: var(--nav-bg);
+    backdrop-filter: blur(8px);
+    border-radius: 100px;
+    border: 1px solid var(--line-bright);
+  }
+
+  .work-year {
+    position: absolute;
+    top: 1.25rem; right: 1.25rem;
+    z-index: 3;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-dim);
+  }
+
+  .work-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+  .work-title {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+  }
+  .work-title em { font-style: italic; color: var(--accent-soft); }
+  .work-client {
+    font-size: 0.85rem;
+    color: var(--ink-dim);
+  }
+  .work-link {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--line-bright);
+    transition: color 0.3s;
+    white-space: nowrap;
+  }
+  .work-card:hover .work-link { color: var(--accent); }
+
+  .works-footer {
+    margin-top: 5rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* ============================================
+     PROCESS
+     ============================================ */
+  .process {
+    background: var(--bg);
+  }
+
+  .process-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+
+  .process-item {
+    padding: 2rem 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .process-num {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 4rem;
+    font-weight: 300;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 1rem;
+  }
+
+  .process-title {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 400;
+    margin-bottom: 0.75rem;
+  }
+
+  .process-text {
+    font-size: 0.9rem;
+    color: var(--ink-dim);
+    line-height: 1.6;
+  }
+
+  /* ============================================
+     CTA SECTION
+     ============================================ */
+  .cta-section {
+    padding: 10rem 2.5rem;
+    text-align: center;
+    background: var(--bg-elev);
+    border-top: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(ellipse at center, rgba(232, 69, 44, 0.08), transparent 60%);
+    pointer-events: none;
+  }
+
+  .cta-title {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 9vw, 7rem);
+    font-weight: 300;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    margin-bottom: 2.5rem;
+    position: relative;
+  }
+  .cta-title em {
+    font-style: italic;
+    color: var(--accent-soft);
+  }
+
+  /* ============================================
+     ALL PROJECTS PAGE
+     ============================================ */
+  .projects-hero {
+    padding: 6rem 2.5rem 4rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .projects-hero-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: end;
+  }
+
+  .projects-hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(3.5rem, 9vw, 7rem);
+    font-weight: 300;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+  }
+  .projects-hero h1 em { font-style: italic; color: var(--accent-soft); }
+
+  .projects-hero p {
+    color: var(--ink-dim);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    max-width: 30rem;
+  }
+
+  .filter-bar {
+    padding: 2rem 2.5rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 75px;
+    background: var(--filter-bg);
+    backdrop-filter: blur(12px);
+    z-index: 50;
+  }
+  .filter-btn {
+    padding: 0.5rem 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    border: 1px solid var(--line-bright);
+    border-radius: 100px;
+    transition: all 0.3s var(--ease-out);
+  }
+  .filter-btn:hover { color: var(--ink); border-color: var(--ink-faint); }
+  .filter-btn.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .filter-count {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    align-self: center;
+  }
+
+  .projects-grid {
+    padding: 4rem 2.5rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+  }
+
+  .project-tile {
+    cursor: pointer;
+    transition: transform 0.5s var(--ease-out), opacity 0.5s;
+  }
+  .project-tile.hidden { display: none; }
+
+  .project-tile-visual {
+    aspect-ratio: 4/5;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-elev-2);
+  }
+  .project-tile-visual svg {
+    width: 100%; height: 100%;
+    transition: transform 1s var(--ease-out);
+  }
+  .project-tile:hover .project-tile-visual svg { transform: scale(1.06); }
+
+  .project-tile-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .project-tile-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.35rem;
+  }
+  .project-tile-title em { font-style: italic; color: var(--accent-soft); }
+  .project-tile-cat {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .project-tile-year {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--ink-dim);
+  }
+
+  /* ============================================
+     ABOUT PAGE
+     ============================================ */
+  .about-hero {
+    padding: 6rem 2.5rem 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: end;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .about-hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  .about-hero-title em { font-style: italic; color: var(--accent-soft); }
+
+  .about-hero-text {
+    color: var(--ink-dim);
+    font-size: 1.1rem;
+    line-height: 1.65;
+  }
+  .about-hero-text em {
+    font-family: var(--font-display);
+    font-style: italic;
+    color: var(--ink);
+    font-size: 1.08em;
+  }
+
+  .manifesto {
+    padding: 6rem 2.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .manifesto-inner {
+    max-width: 60rem;
+    margin: 0 auto;
+  }
+  .manifesto-quote {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3.2vw, 2.5rem);
+    font-weight: 300;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+  .manifesto-quote em {
+    font-style: italic;
+    color: var(--accent-soft);
+  }
+  .manifesto-quote .hl {
+    position: relative;
+    display: inline-block;
+  }
+  .manifesto-quote .hl::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: 0.1em;
+    width: 100%; height: 3px;
+    background: var(--accent);
+  }
+
+  .manifesto-sig {
+    margin-top: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .manifesto-sig::before {
+    content: '';
+    width: 40px; height: 1px;
+    background: var(--ink-faint);
+  }
+
+  .stats {
+    padding: 6rem 2.5rem;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .stat {
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+  }
+  .stat-num {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 5vw, 4.5rem);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.75rem;
+  }
+  .stat-num em { font-style: italic; color: var(--accent-soft); }
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .tools {
+    padding: 6rem 2.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .tools-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4.5vw, 3.5rem);
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    margin-bottom: 3rem;
+  }
+  .tools-title em { font-style: italic; color: var(--accent-soft); }
+  .tools-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .tool-chip {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--line-bright);
+    border-radius: 100px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--ink-dim);
+    letter-spacing: 0.05em;
+    transition: all 0.3s var(--ease-out);
+  }
+  .tool-chip:hover {
+    color: var(--ink);
+    border-color: var(--ink-faint);
+    transform: translateY(-2px);
+  }
+
+  /* ============================================
+     CONTACT PAGE
+     ============================================ */
+  .contact {
+    padding: 6rem 2.5rem;
+    min-height: calc(100vh - 5rem);
+  }
+
+  .contact-inner {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 5rem;
+  }
+
+  .contact-title {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 8vw, 6.5rem);
+    font-weight: 300;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    margin-bottom: 2rem;
+  }
+  .contact-title em { font-style: italic; color: var(--accent-soft); }
+
+  .contact-text {
+    color: var(--ink-dim);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin-bottom: 3rem;
+    max-width: 28rem;
+  }
+
+  .contact-email {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3.5vw, 2.75rem);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    padding: 1rem 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    position: relative;
+    transition: color 0.4s var(--ease-out);
+  }
+  .contact-email::after {
+    content: '→';
+    font-size: 1.5rem;
+    transition: transform 0.4s var(--ease-out);
+  }
+  .contact-email:hover { color: var(--accent-soft); }
+  .contact-email:hover::after { transform: translate(6px, -4px) rotate(-15deg); }
+
+  .contact-form {
+    padding: 2.5rem;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+  }
+  .form-row {
+    margin-bottom: 1.5rem;
+  }
+  .form-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .form-input, .form-textarea {
+    width: 100%;
+    padding: 0.85rem 0;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--line-bright);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    transition: border-color 0.3s;
+    outline: none;
+  }
+  .form-input:focus, .form-textarea:focus {
+    border-bottom-color: var(--accent);
+  }
+  .form-textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  .form-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .tag-check {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--line-bright);
+    border-radius: 100px;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .tag-check.selected {
+    background: var(--accent);
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+
+  .form-submit {
+    width: 100%;
+    padding: 1.1rem;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 1rem;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .form-submit:hover { background: var(--accent); }
+
+  /* ============================================
+     FOOTER
+     ============================================ */
+  footer {
+    background: var(--bg);
+    border-top: 1px solid var(--line);
+    padding: 5rem 2.5rem 2rem;
+  }
+
+  .footer-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 3rem;
+    margin-bottom: 4rem;
+  }
+
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .footer-logo {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 6vw, 5rem);
+    font-weight: 300;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+  }
+  .footer-logo em { font-style: italic; color: var(--accent-soft); }
+  .footer-tagline {
+    color: var(--ink-dim);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    max-width: 24rem;
+  }
+
+  .footer-col h4 {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    font-weight: 400;
+  }
+  .footer-col ul { list-style: none; }
+  .footer-col li { margin-bottom: 0.8rem; }
+  .footer-col a {
+    color: var(--ink-dim);
+    font-size: 0.9rem;
+    transition: color 0.3s;
+    position: relative;
+  }
+  .footer-col a:hover { color: var(--ink); }
+
+  .social-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .social-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    color: var(--ink-dim);
+    font-size: 0.9rem;
+    border-bottom: 1px solid transparent;
+    transition: all 0.3s var(--ease-out);
+  }
+  .social-link:hover {
+    color: var(--accent-soft);
+    border-bottom-color: var(--line-bright);
+    padding-left: 0.5rem;
+  }
+  .social-link::after {
+    content: '↗';
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s var(--ease-out);
+  }
+  .social-link:hover::after {
+    opacity: 1;
+    transform: translate(2px, -2px);
+  }
+
+  .footer-bottom {
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-bottom .live-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .footer-bottom .live-dot::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  /* ============================================
+     REVEAL ON SCROLL
+     ============================================ */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ============================================
+     RESPONSIVE
+     ============================================ */
+  @media (max-width: 900px) {
+    .nav { padding: 1.25rem 1.5rem; }
+    .nav-right { gap: 0.75rem; }
+    .nav-menu {
+      position: fixed;
+      top: 0; right: 0;
+      height: 100vh;
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg);
+      flex-direction: column;
+      justify-content: center;
+      padding: 3rem;
+      gap: 2rem;
+      transform: translateX(100%);
+      transition: transform 0.5s var(--ease-in-out);
+      border-left: 1px solid var(--line);
+    }
+    .nav-menu.open { transform: translateX(0); }
+    .nav-menu .nav-link { font-size: 1.25rem; }
+    .menu-toggle { display: flex; }
+    .menu-toggle.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .menu-toggle.open span:nth-child(2) { opacity: 0; }
+    .menu-toggle.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+    .hero { padding: 3rem 1.5rem 5rem; }
+    .hero-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .hero-meta { flex-direction: row; align-items: flex-start; flex-wrap: wrap; }
+    .hero-meta-block { border-right: none; border-left: 1px solid var(--line-bright); padding-right: 0; padding-left: 1rem; text-align: left; }
+
+    section, .projects-hero, .about-hero, .manifesto, .stats, .tools, .contact, .cta-section { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .works-grid, .process-grid, .projects-hero-inner, .about-hero, .footer-main, .contact-inner { grid-template-columns: 1fr; gap: 2.5rem; }
+    .work-card:nth-child(2) { transform: translateY(0); }
+    .process-grid { gap: 0; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .projects-grid { grid-template-columns: 1fr 1fr; padding: 2rem 1.5rem; }
+
+    .service { grid-template-columns: 40px 1fr; gap: 1rem; padding: 1.75rem 0; }
+    .service-desc, .service-arrow { display: none; }
+
+    .section-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .filter-bar { top: 68px; padding: 1.25rem 1.5rem; }
+    .filter-count { display: none; }
+
+    footer { padding: 3rem 1.5rem 1.5rem; }
+    .footer-bottom { flex-direction: column; align-items: flex-start; }
+  }
+
+  @media (max-width: 500px) {
+    .projects-grid { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr; }
+    .hero-cta-row { flex-direction: column; align-items: stretch; }
+    .hero-cta-row .btn-primary { justify-content: center; }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div class="loader" id="loader">
+  <div class="loader-mark">Импульс<span style="color: var(--accent);">.</span></div>
+</div>
+
+<!-- NAVIGATION -->
+<nav class="nav" id="nav">
+  <a href="#" class="nav-logo" data-page="home">
+    <span class="dot"></span>
+    <span data-t="brand">Импульс</span>
+  </a>
+  <ul class="nav-menu" id="navMenu">
+    <li><a href="#" class="nav-link active" data-page="home"><span class="num">01</span><span data-t="nav_home">Главная</span></a></li>
+    <li><a href="#" class="nav-link" data-page="projects"><span class="num">02</span><span data-t="nav_work">Проекты</span></a></li>
+    <li><a href="#" class="nav-link" data-page="about"><span class="num">03</span><span data-t="nav_about">Студия</span></a></li>
+    <li><a href="#" class="nav-link" data-page="contact"><span class="num">04</span><span data-t="nav_contact">Контакты</span></a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="lang-switch">
+      <button class="lang-btn active" data-lang="ru">RU</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+      </svg>
+    </button>
+    <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ============== HOME PAGE ============== -->
+<div class="page active" id="page-home">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="hero-orb"></div>
+    </div>
+    <div class="hero-label">
+      <span data-t="hero_label">Нейростудия · Санкт-Петербург · С 2024</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1 class="hero-title">
+          <span class="line"><span class="word" data-t="hero_1">Создаём</span></span>
+          <span class="line"><span class="word italic" data-t="hero_2">импульс</span></span>
+        </h1>
+        <p class="hero-desc">
+          <span data-t="hero_desc_1">Превращаем идеи в </span><em data-t="hero_desc_em">кинематографичные</em><span data-t="hero_desc_2"> ролики, сайты, презентации и приложения — с помощью нейросетей и вкуса.</span>
+        </p>
+        <div class="hero-cta-row">
+          <a href="#" class="btn-primary" data-page="projects">
+            <span data-t="cta_work">Смотреть работы</span>
+            <span class="arrow">→</span>
+          </a>
+          <a href="#" class="btn-ghost" data-page="contact" data-t="cta_brief">Обсудить проект</a>
+        </div>
+      </div>
+      <div class="hero-meta">
+        <div class="hero-meta-block">
+          <strong>50+</strong>
+          <span data-t="meta_projects">Проектов</span>
+        </div>
+        <div class="hero-meta-block">
+          <strong>12</strong>
+          <span data-t="meta_tools">AI-инструментов</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ticker">
+      <div class="ticker-track">
+        <span><em data-t="tick_1">Нейровидео</em></span><span class="star">✦</span>
+        <span data-t="tick_2">Сайты под ключ</span><span class="star">✦</span>
+        <span><em data-t="tick_3">Презентации</em></span><span class="star">✦</span>
+        <span data-t="tick_4">Мобильные приложения</span><span class="star">✦</span>
+        <span><em data-t="tick_5">Брендинг</em></span><span class="star">✦</span>
+        <span data-t="tick_1b">Нейровидео</span><span class="star">✦</span>
+        <span><em data-t="tick_2b">Сайты под ключ</em></span><span class="star">✦</span>
+        <span data-t="tick_3b">Презентации</span><span class="star">✦</span>
+        <span><em data-t="tick_4b">Мобильные приложения</em></span><span class="star">✦</span>
+        <span data-t="tick_5b">Брендинг</span><span class="star">✦</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="services">
+    <div class="section-header reveal">
+      <div>
+        <div class="section-label"><span data-t="serv_label">Что делаем</span></div>
+        <h2 class="section-title">
+          <span data-t="serv_title_1">Четыре направления.</span><br>
+          <em data-t="serv_title_em">Один почерк.</em>
+        </h2>
+      </div>
+    </div>
+    <div class="services-list">
+      <div class="service reveal">
+        <span class="service-num">01</span>
+        <span class="service-name"><em data-t="s1_name">Нейровидео</em></span>
+        <span class="service-desc" data-t="s1_desc">Рекламные ролики, клипы, тизеры с кинематографичной картинкой. ARRI-look, анаморф, Kodak 2383.</span>
+        <span class="service-arrow">→</span>
+      </div>
+      <div class="service reveal">
+        <span class="service-num">02</span>
+        <span class="service-name" data-t="s2_name">Сайты</span>
+        <span class="service-desc" data-t="s2_desc">Лендинги, портфолио, интернет-магазины. Современный дизайн, плавные анимации, заточка под конверсию.</span>
+        <span class="service-arrow">→</span>
+      </div>
+      <div class="service reveal">
+        <span class="service-num">03</span>
+        <span class="service-name"><em data-t="s3_name">Презентации</em></span>
+        <span class="service-desc" data-t="s3_desc">Инвестиционные, продуктовые, образовательные. Разрабатываем концепцию, текст, визуал и анимации.</span>
+        <span class="service-arrow">→</span>
+      </div>
+      <div class="service reveal">
+        <span class="service-num">04</span>
+        <span class="service-name" data-t="s4_name">Приложения</span>
+        <span class="service-desc" data-t="s4_desc">Мобильные и веб-приложения на базе AI-пайплайнов. От идеи и UX до рабочего MVP за недели, а не месяцы.</span>
+        <span class="service-arrow">→</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED WORKS -->
+  <section class="works">
+    <div class="section-header reveal">
+      <div>
+        <div class="section-label"><span data-t="work_label">Избранное</span></div>
+        <h2 class="section-title">
+          <span data-t="work_title_1">Недавние</span>
+          <em data-t="work_title_em">работы</em>
+        </h2>
+      </div>
+      <a href="#" class="btn-ghost" data-page="projects" data-t="work_all">Все проекты →</a>
+    </div>
+
+    <div class="works-grid">
+      <article class="work-card reveal" data-page="projects">
+        <div class="work-visual">
+          <span class="work-tag" data-t="w1_tag">Нейровидео</span>
+          <span class="work-year">2025</span>
+          <div class="work-visual-inner">
+            <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+              <defs>
+                <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#1a1a2e"/>
+                  <stop offset="50%" stop-color="#2d1810"/>
+                  <stop offset="100%" stop-color="#0a0a0a"/>
+                </linearGradient>
+                <radialGradient id="g1b">
+                  <stop offset="0%" stop-color="#e8452c" stop-opacity="0.4"/>
+                  <stop offset="100%" stop-color="#e8452c" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+              <rect width="400" height="500" fill="url(#g1)"/>
+              <circle cx="280" cy="180" r="160" fill="url(#g1b)"/>
+              <g stroke="#f5a08c" stroke-width="0.5" fill="none" opacity="0.5">
+                <path d="M 0 350 Q 100 300 200 340 T 400 330"/>
+                <path d="M 0 370 Q 100 320 200 360 T 400 350"/>
+                <path d="M 0 390 Q 100 340 200 380 T 400 370"/>
+              </g>
+              <circle cx="200" cy="250" r="80" fill="none" stroke="#f4f0e8" stroke-width="1" opacity="0.3"/>
+              <circle cx="200" cy="250" r="120" fill="none" stroke="#f4f0e8" stroke-width="0.5" opacity="0.2"/>
+              <text x="200" y="260" text-anchor="middle" fill="#f4f0e8" font-family="Fraunces" font-style="italic" font-size="28" opacity="0.9">GAL</text>
+            </svg>
+          </div>
+        </div>
+        <div class="work-meta">
+          <div>
+            <h3 class="work-title"><span data-t="w1_title">Кампания </span><em>GAL</em></h3>
+            <span class="work-client" data-t="w1_client">Электроника · 8 роликов</span>
+          </div>
+          <span class="work-link" data-t="w1_link">Смотреть →</span>
+        </div>
+      </article>
+
+      <article class="work-card reveal" data-page="projects">
+        <div class="work-visual">
+          <span class="work-tag" data-t="w2_tag">Короткий метр</span>
+          <span class="work-year">2025</span>
+          <div class="work-visual-inner">
+            <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+              <defs>
+                <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#0d1117"/>
+                  <stop offset="100%" stop-color="#1a1a2e"/>
+                </linearGradient>
+              </defs>
+              <rect width="400" height="300" fill="url(#g2)"/>
+              <rect x="40" y="60" width="320" height="180" fill="none" stroke="#f4f0e8" stroke-width="0.5" opacity="0.3"/>
+              <g opacity="0.6">
+                <rect x="60" y="90" width="180" height="120" fill="#2d1810"/>
+                <circle cx="150" cy="150" r="40" fill="#e8452c" opacity="0.6"/>
+                <rect x="260" y="90" width="80" height="120" fill="#1a1a2e"/>
+              </g>
+              <text x="200" y="270" text-anchor="middle" fill="#f4f0e8" font-family="Fraunces" font-size="14" opacity="0.7" letter-spacing="4">AGENT · 007 · RETRO</text>
+            </svg>
+          </div>
+        </div>
+        <div class="work-meta">
+          <div>
+            <h3 class="work-title"><em data-t="w2_title_em">Echo</em><span data-t="w2_title"> — ретро-фьюче</span></h3>
+            <span class="work-client" data-t="w2_client">Личный проект · 11 сцен</span>
+          </div>
+          <span class="work-link" data-t="w2_link">Смотреть →</span>
+        </div>
+      </article>
+    </div>
+
+    <div class="works-footer">
+      <a href="#" class="btn-primary" data-page="projects">
+        <span data-t="work_cta">Все проекты</span>
+        <span class="arrow">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section class="process">
+    <div class="section-header reveal">
+      <div>
+        <div class="section-label"><span data-t="proc_label">Как работаем</span></div>
+        <h2 class="section-title">
+          <span data-t="proc_title_1">Процесс</span>
+          <em data-t="proc_title_em">в четыре такта</em>
+        </h2>
+      </div>
+    </div>
+    <div class="process-grid">
+      <div class="process-item reveal">
+        <div class="process-num">01</div>
+        <h3 class="process-title" data-t="p1_title">Бриф</h3>
+        <p class="process-text" data-t="p1_text">Разбираемся в задаче, аудитории и референсах. Фиксируем цель и метрики.</p>
+      </div>
+      <div class="process-item reveal">
+        <div class="process-num">02</div>
+        <h3 class="process-title" data-t="p2_title">Концепция</h3>
+        <p class="process-text" data-t="p2_text">Визуальный язык, сторилайн, раскадровка. Согласовываем до продакшна.</p>
+      </div>
+      <div class="process-item reveal">
+        <div class="process-num">03</div>
+        <h3 class="process-title" data-t="p3_title">Продакшн</h3>
+        <p class="process-text" data-t="p3_text">Промптинг, генерация, композ, цветокор. Контролируем каждый кадр.</p>
+      </div>
+      <div class="process-item reveal">
+        <div class="process-num">04</div>
+        <h3 class="process-title" data-t="p4_title">Финал</h3>
+        <p class="process-text" data-t="p4_text">Правки, мастеринг, форматы под площадки. Сдаём пакетом.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <h2 class="cta-title">
+      <span data-t="cta_t_1">Есть идея?</span><br>
+      <em data-t="cta_t_em">Давайте воплотим.</em>
+    </h2>
+    <a href="#" class="btn-primary" data-page="contact">
+      <span data-t="cta_btn">Написать нам</span>
+      <span class="arrow">→</span>
+    </a>
+  </section>
+
+</div>
+
+<!-- ============== PROJECTS PAGE ============== -->
+<div class="page" id="page-projects">
+  <section class="projects-hero">
+    <div class="projects-hero-inner">
+      <h1><span data-t="pj_h_1">Все</span> <em data-t="pj_h_em">проекты</em></h1>
+      <p data-t="pj_h_desc">Фильмы, ролики, сайты, презентации, приложения. Работы 2023—2026 годов, отобранные по принципу: нам до сих пор не стыдно их показывать.</p>
+    </div>
+  </section>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all" data-t="f_all">Все</button>
+    <button class="filter-btn" data-filter="video" data-t="f_video">Нейровидео</button>
+    <button class="filter-btn" data-filter="web" data-t="f_web">Сайты</button>
+    <button class="filter-btn" data-filter="deck" data-t="f_deck">Презентации</button>
+    <button class="filter-btn" data-filter="app" data-t="f_app">Приложения</button>
+    <span class="filter-count"><span id="filterCount">12</span> <span data-t="f_count">проектов</span></span>
+  </div>
+
+  <div class="projects-grid" id="projectsGrid"></div>
+</div>
+
+<!-- ============== ABOUT PAGE ============== -->
+<div class="page" id="page-about">
+  <section class="about-hero">
+    <h1 class="about-hero-title">
+      <span data-t="ab_h_1">Мы — </span><em data-t="ab_h_em">Импульс</em>.<br>
+      <span data-t="ab_h_2">Маленькая студия с большим вкусом.</span>
+    </h1>
+    <p class="about-hero-text">
+      <span data-t="ab_desc_1">Работаем на стыке </span><em data-t="ab_desc_em">кино, дизайна и нейросетей</em><span data-t="ab_desc_2">. Делаем контент, который не выглядит как контент: он выглядит как искусство, которое случайно продаёт.</span>
+    </p>
+  </section>
+
+  <section class="manifesto">
+    <div class="manifesto-inner reveal">
+      <p class="manifesto-quote">
+        <span data-t="man_1">Нейросети — это не замена режиссёру. Это </span><em data-t="man_em_1">новая оптика</em><span data-t="man_2">. Камера, которой не существовало. Мы </span><span class="hl" data-t="man_hl">видим этот инструмент</span><span data-t="man_3"> как продолжение руки — и пользуемся им так же аккуратно, как оператор </span><em data-t="man_em_2">пользуется светом</em><span data-t="man_4">.</span>
+      </p>
+      <div class="manifesto-sig"><span data-t="man_sig">Денис, основатель</span></div>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat reveal">
+      <div class="stat-num"><em>50</em>+</div>
+      <div class="stat-label" data-t="st_1">Проектов сдано</div>
+    </div>
+    <div class="stat reveal">
+      <div class="stat-num"><em>28</em></div>
+      <div class="stat-label" data-t="st_2">Брендов-клиентов</div>
+    </div>
+    <div class="stat reveal">
+      <div class="stat-num"><em>12</em></div>
+      <div class="stat-label" data-t="st_3">AI-инструментов</div>
+    </div>
+    <div class="stat reveal">
+      <div class="stat-num"><em>3</em></div>
+      <div class="stat-label" data-t="st_4">Года опыта</div>
+    </div>
+  </section>
+
+  <section class="tools">
+    <h2 class="tools-title">
+      <span data-t="tl_1">Наш </span><em data-t="tl_em">арсенал</em>
+    </h2>
+    <div class="tools-list">
+      <span class="tool-chip">Midjourney</span>
+      <span class="tool-chip">Runway ML</span>
+      <span class="tool-chip">Kling AI</span>
+      <span class="tool-chip">SYNTX</span>
+      <span class="tool-chip">Luma Dream</span>
+      <span class="tool-chip">Suno</span>
+      <span class="tool-chip">ElevenLabs</span>
+      <span class="tool-chip">Weavy</span>
+      <span class="tool-chip">Figma</span>
+      <span class="tool-chip">Webflow</span>
+      <span class="tool-chip">After Effects</span>
+      <span class="tool-chip">DaVinci Resolve</span>
+    </div>
+  </section>
+</div>
+
+<!-- ============== CONTACT PAGE ============== -->
+<div class="page" id="page-contact">
+  <section class="contact">
+    <div class="contact-inner">
+      <div>
+        <h1 class="contact-title">
+          <span data-t="ct_t_1">Напишите</span><br>
+          <em data-t="ct_t_em">нам.</em>
+        </h1>
+        <p class="contact-text" data-t="ct_desc">Обычно отвечаем в течение нескольких часов. Расскажите о проекте в двух словах — мы перезвоним и уточним детали.</p>
+        <a href="mailto:hello@impulse.studio" class="contact-email">hello@impulse.studio</a>
+      </div>
+
+      <form class="contact-form" id="contactForm">
+        <div class="form-row">
+          <label class="form-label" data-t="ct_name">Имя</label>
+          <input type="text" class="form-input" required>
+        </div>
+        <div class="form-row">
+          <label class="form-label" data-t="ct_contact">Email или Telegram</label>
+          <input type="text" class="form-input" required>
+        </div>
+        <div class="form-row">
+          <label class="form-label" data-t="ct_service">Что интересует</label>
+          <div class="form-tags">
+            <span class="tag-check" data-t="ct_tag1">Нейровидео</span>
+            <span class="tag-check" data-t="ct_tag2">Сайт</span>
+            <span class="tag-check" data-t="ct_tag3">Презентация</span>
+            <span class="tag-check" data-t="ct_tag4">Приложение</span>
+            <span class="tag-check" data-t="ct_tag5">Другое</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label" data-t="ct_msg">Расскажите о проекте</label>
+          <textarea class="form-textarea" rows="3"></textarea>
+        </div>
+        <button type="submit" class="form-submit" data-t="ct_send">Отправить</button>
+      </form>
+    </div>
+  </section>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-main">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <span data-t="f_brand_1">Импульс</span><em data-t="f_brand_em">.</em>
+      </div>
+      <p class="footer-tagline" data-t="f_tagline">Нейростудия полного цикла. Создаём видео, сайты, презентации и приложения с помощью AI и человеческого вкуса.</p>
+    </div>
+
+    <div class="footer-col">
+      <h4 data-t="f_nav">Навигация</h4>
+      <ul>
+        <li><a href="#" data-page="home" data-t="nav_home">Главная</a></li>
+        <li><a href="#" data-page="projects" data-t="nav_work">Проекты</a></li>
+        <li><a href="#" data-page="about" data-t="nav_about">Студия</a></li>
+        <li><a href="#" data-page="contact" data-t="nav_contact">Контакты</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4 data-t="f_serv">Услуги</h4>
+      <ul>
+        <li><a href="#" data-page="contact" data-t="s1_name">Нейровидео</a></li>
+        <li><a href="#" data-page="contact" data-t="s2_name">Сайты</a></li>
+        <li><a href="#" data-page="contact" data-t="s3_name">Презентации</a></li>
+        <li><a href="#" data-page="contact" data-t="s4_name">Приложения</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4 data-t="f_social">Соцсети</h4>
+      <div class="social-grid">
+        <a href="https://instagram.com" target="_blank" rel="noopener" class="social-link">Instagram</a>
+        <a href="https://t.me" target="_blank" rel="noopener" class="social-link">Telegram</a>
+        <a href="https://max.ru" target="_blank" rel="noopener" class="social-link">Max</a>
+        <a href="https://dribbble.com" target="_blank" rel="noopener" class="social-link">Dribbble</a>
+        <a href="https://vimeo.com" target="_blank" rel="noopener" class="social-link">Vimeo</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© 2026 <span data-t="brand">Импульс</span> <span data-t="f_rights">— Все права защищены</span></span>
+    <span class="live-dot"><span data-t="f_live">Принимаем проекты</span></span>
+    <span data-t="f_built">Сделано с любовью и нейросетями</span>
+  </div>
+</footer>
+
+<script>
+  /* ============================================
+     TRANSLATIONS
+     ============================================ */
+  const translations = {
+    ru: {
+      brand: "Импульс",
+      nav_home: "Главная",
+      nav_work: "Проекты",
+      nav_about: "Студия",
+      nav_contact: "Контакты",
+      hero_label: "Нейростудия · Санкт-Петербург · С 2024",
+      hero_1: "Создаём",
+      hero_2: "импульс",
+      hero_desc_1: "Превращаем идеи в ",
+      hero_desc_em: "кинематографичные",
+      hero_desc_2: " ролики, сайты, презентации и приложения — с помощью нейросетей и вкуса.",
+      cta_work: "Смотреть работы",
+      cta_brief: "Обсудить проект",
+      meta_projects: "Проектов",
+      meta_tools: "AI-инструментов",
+      tick_1: "Нейровидео", tick_2: "Сайты под ключ", tick_3: "Презентации", tick_4: "Мобильные приложения", tick_5: "Брендинг",
+      tick_1b: "Нейровидео", tick_2b: "Сайты под ключ", tick_3b: "Презентации", tick_4b: "Мобильные приложения", tick_5b: "Брендинг",
+      serv_label: "Что делаем",
+      serv_title_1: "Четыре направления.",
+      serv_title_em: "Один почерк.",
+      s1_name: "Нейровидео",
+      s1_desc: "Рекламные ролики, клипы, тизеры с кинематографичной картинкой. ARRI-look, анаморф, Kodak 2383.",
+      s2_name: "Сайты",
+      s2_desc: "Лендинги, портфолио, интернет-магазины. Современный дизайн, плавные анимации, заточка под конверсию.",
+      s3_name: "Презентации",
+      s3_desc: "Инвестиционные, продуктовые, образовательные. Разрабатываем концепцию, текст, визуал и анимации.",
+      s4_name: "Приложения",
+      s4_desc: "Мобильные и веб-приложения на базе AI-пайплайнов. От идеи и UX до рабочего MVP за недели, а не месяцы.",
+      work_label: "Избранное",
+      work_title_1: "Недавние",
+      work_title_em: "работы",
+      work_all: "Все проекты →",
+      work_cta: "Все проекты",
+      w1_tag: "Нейровидео", w1_title: "Кампания ", w1_client: "Электроника · 8 роликов", w1_link: "Смотреть →",
+      w2_tag: "Короткий метр", w2_title_em: "Echo", w2_title: " — ретро-фьюче", w2_client: "Личный проект · 11 сцен", w2_link: "Смотреть →",
+      proc_label: "Как работаем",
+      proc_title_1: "Процесс",
+      proc_title_em: "в четыре такта",
+      p1_title: "Бриф", p1_text: "Разбираемся в задаче, аудитории и референсах. Фиксируем цель и метрики.",
+      p2_title: "Концепция", p2_text: "Визуальный язык, сторилайн, раскадровка. Согласовываем до продакшна.",
+      p3_title: "Продакшн", p3_text: "Промптинг, генерация, композ, цветокор. Контролируем каждый кадр.",
+      p4_title: "Финал", p4_text: "Правки, мастеринг, форматы под площадки. Сдаём пакетом.",
+      cta_t_1: "Есть идея?",
+      cta_t_em: "Давайте воплотим.",
+      cta_btn: "Написать нам",
+      pj_h_1: "Все",
+      pj_h_em: "проекты",
+      pj_h_desc: "Фильмы, ролики, сайты, презентации, приложения. Работы 2023—2026 годов, отобранные по принципу: нам до сих пор не стыдно их показывать.",
+      f_all: "Все", f_video: "Нейровидео", f_web: "Сайты", f_deck: "Презентации", f_app: "Приложения",
+      f_count: "проектов",
+      ab_h_1: "Мы — ",
+      ab_h_em: "Импульс",
+      ab_h_2: "Маленькая студия с большим вкусом.",
+      ab_desc_1: "Работаем на стыке ",
+      ab_desc_em: "кино, дизайна и нейросетей",
+      ab_desc_2: ". Делаем контент, который не выглядит как контент: он выглядит как искусство, которое случайно продаёт.",
+      man_1: "Нейросети — это не замена режиссёру. Это ",
+      man_em_1: "новая оптика",
+      man_2: ". Камера, которой не существовало. Мы ",
+      man_hl: "видим этот инструмент",
+      man_3: " как продолжение руки — и пользуемся им так же аккуратно, как оператор ",
+      man_em_2: "пользуется светом",
+      man_4: ".",
+      man_sig: "Денис, основатель",
+      st_1: "Проектов сдано", st_2: "Брендов-клиентов", st_3: "AI-инструментов", st_4: "Года опыта",
+      tl_1: "Наш ",
+      tl_em: "арсенал",
+      ct_t_1: "Напишите",
+      ct_t_em: "нам.",
+      ct_desc: "Обычно отвечаем в течение нескольких часов. Расскажите о проекте в двух словах — мы перезвоним и уточним детали.",
+      ct_name: "Имя", ct_contact: "Email или Telegram", ct_service: "Что интересует",
+      ct_tag1: "Нейровидео", ct_tag2: "Сайт", ct_tag3: "Презентация", ct_tag4: "Приложение", ct_tag5: "Другое",
+      ct_msg: "Расскажите о проекте", ct_send: "Отправить",
+      f_brand_1: "Импульс", f_brand_em: ".",
+      f_tagline: "Нейростудия полного цикла. Создаём видео, сайты, презентации и приложения с помощью AI и человеческого вкуса.",
+      f_nav: "Навигация", f_serv: "Услуги", f_social: "Соцсети",
+      f_rights: "— Все права защищены",
+      f_live: "Принимаем проекты",
+      f_built: "Сделано с любовью и нейросетями"
+    },
+    en: {
+      brand: "Impulse",
+      nav_home: "Home", nav_work: "Work", nav_about: "Studio", nav_contact: "Contact",
+      hero_label: "Neurostudio · Saint Petersburg · Since 2024",
+      hero_1: "Creating",
+      hero_2: "impulse",
+      hero_desc_1: "Turning ideas into ",
+      hero_desc_em: "cinematic",
+      hero_desc_2: " films, websites, decks and apps — powered by neural nets and taste.",
+      cta_work: "See our work",
+      cta_brief: "Start a project",
+      meta_projects: "Projects",
+      meta_tools: "AI tools",
+      tick_1: "AI Video", tick_2: "Full-stack Websites", tick_3: "Presentations", tick_4: "Mobile Apps", tick_5: "Branding",
+      tick_1b: "AI Video", tick_2b: "Full-stack Websites", tick_3b: "Presentations", tick_4b: "Mobile Apps", tick_5b: "Branding",
+      serv_label: "What we do",
+      serv_title_1: "Four disciplines.",
+      serv_title_em: "One signature.",
+      s1_name: "AI Video",
+      s1_desc: "Ads, clips, teasers with cinematic look. ARRI grade, anamorphic, Kodak 2383.",
+      s2_name: "Websites",
+      s2_desc: "Landing pages, portfolios, e-commerce. Modern design, smooth motion, built to convert.",
+      s3_name: "Decks",
+      s3_desc: "Investor, product, educational. We craft concept, copy, visuals and animations end-to-end.",
+      s4_name: "Apps",
+      s4_desc: "Mobile and web apps powered by AI pipelines. From idea and UX to working MVP in weeks.",
+      work_label: "Featured",
+      work_title_1: "Recent",
+      work_title_em: "work",
+      work_all: "All projects →",
+      work_cta: "All projects",
+      w1_tag: "AI Video", w1_title: "Campaign ", w1_client: "Electronics · 8 spots", w1_link: "View →",
+      w2_tag: "Short Film", w2_title_em: "Echo", w2_title: " — retro-future", w2_client: "Personal · 11 scenes", w2_link: "View →",
+      proc_label: "How we work",
+      proc_title_1: "Process",
+      proc_title_em: "in four beats",
+      p1_title: "Brief", p1_text: "We map the task, audience, references. Pin down goals and metrics.",
+      p2_title: "Concept", p2_text: "Visual language, storyline, storyboard. Approved before production.",
+      p3_title: "Production", p3_text: "Prompting, generation, compositing, grading. Every frame under control.",
+      p4_title: "Finish", p4_text: "Revisions, mastering, platform formats. Delivered as a package.",
+      cta_t_1: "Got an idea?",
+      cta_t_em: "Let's make it real.",
+      cta_btn: "Get in touch",
+      pj_h_1: "All",
+      pj_h_em: "projects",
+      pj_h_desc: "Films, spots, websites, decks, apps. Works from 2023—2026, curated by one simple rule: we're still proud to show them.",
+      f_all: "All", f_video: "AI Video", f_web: "Web", f_deck: "Decks", f_app: "Apps",
+      f_count: "projects",
+      ab_h_1: "We are ",
+      ab_h_em: "Impulse",
+      ab_h_2: "A small studio with big taste.",
+      ab_desc_1: "We work at the intersection of ",
+      ab_desc_em: "cinema, design and neural nets",
+      ab_desc_2: ". We make content that doesn't look like content: it looks like art that happens to sell.",
+      man_1: "Neural nets don't replace the director. They're ",
+      man_em_1: "a new optic",
+      man_2: ". A camera that didn't exist before. We ",
+      man_hl: "see this tool",
+      man_3: " as an extension of the hand — and use it as carefully as a DP ",
+      man_em_2: "handles light",
+      man_4: ".",
+      man_sig: "Denis, founder",
+      st_1: "Projects shipped", st_2: "Client brands", st_3: "AI tools", st_4: "Years of practice",
+      tl_1: "Our ",
+      tl_em: "arsenal",
+      ct_t_1: "Say",
+      ct_t_em: "hello.",
+      ct_desc: "We usually reply within a few hours. Tell us about your project in a sentence — we'll follow up with details.",
+      ct_name: "Name", ct_contact: "Email or Telegram", ct_service: "What's on the table",
+      ct_tag1: "AI Video", ct_tag2: "Website", ct_tag3: "Deck", ct_tag4: "App", ct_tag5: "Other",
+      ct_msg: "Tell us about it", ct_send: "Send",
+      f_brand_1: "Impulse", f_brand_em: ".",
+      f_tagline: "Full-cycle neurostudio. We craft videos, websites, decks and apps with AI and human taste.",
+      f_nav: "Navigation", f_serv: "Services", f_social: "Social",
+      f_rights: "— All rights reserved",
+      f_live: "Taking on projects",
+      f_built: "Made with love and neural nets"
+    }
+  };
+
+  /* ============================================
+     PROJECTS DATA
+     ============================================ */
+  const projects = [
+    { id: 1, title: { ru: "Кампания GAL", en: "GAL Campaign" }, cat: "video", year: 2025, catLabel: { ru: "Нейровидео", en: "AI Video" }, grad: ["#1a1a2e", "#2d1810"], accent: "#e8452c", type: "circuit" },
+    { id: 2, title: { ru: "Echo · агент 007", en: "Echo · agent 007" }, cat: "video", year: 2025, catLabel: { ru: "Короткий метр", en: "Short Film" }, grad: ["#0d1117", "#1a1a2e"], accent: "#8b7355", type: "frame" },
+    { id: 3, title: { ru: "Наследник", en: "The Heir" }, cat: "video", year: 2025, catLabel: { ru: "Трейлер", en: "Trailer" }, grad: ["#1a0f0a", "#2d1810"], accent: "#c9a961", type: "dust" },
+    { id: 4, title: { ru: "BioPeel", en: "BioPeel" }, cat: "video", year: 2024, catLabel: { ru: "Реклама", en: "Commercial" }, grad: ["#0f2027", "#1a3a4a"], accent: "#7ec8a8", type: "bubble" },
+    { id: 5, title: { ru: "Волшебные брызги", en: "Magic Splashes" }, cat: "video", year: 2024, catLabel: { ru: "Анимация", en: "Animation" }, grad: ["#2d1b3d", "#5a3a7a"], accent: "#ffc0cb", type: "splash" },
+    { id: 6, title: { ru: "Finance Tracker", en: "Finance Tracker" }, cat: "app", year: 2024, catLabel: { ru: "Приложение", en: "App" }, grad: ["#0a1628", "#1a2a4a"], accent: "#6ea8fe", type: "chart" },
+    { id: 7, title: { ru: "Дневник вайбкодера", en: "Vibe Coder Diary" }, cat: "web", year: 2024, catLabel: { ru: "Сайт", en: "Website" }, grad: ["#111111", "#1a1a1a"], accent: "#e8452c", type: "grid" },
+    { id: 8, title: { ru: "ТПСК", en: "TPSK" }, cat: "deck", year: 2024, catLabel: { ru: "Презентация", en: "Deck" }, grad: ["#1a1414", "#3d1a1a"], accent: "#e85454", type: "layers" },
+    { id: 9, title: { ru: "SYNTX · трейлер", en: "SYNTX · trailer" }, cat: "video", year: 2025, catLabel: { ru: "Конкурс", en: "Contest" }, grad: ["#0f0a1a", "#2a1a3d"], accent: "#c49fff", type: "stars" },
+    { id: 10, title: { ru: "Weavy Launch", en: "Weavy Launch" }, cat: "web", year: 2025, catLabel: { ru: "Лендинг", en: "Landing" }, grad: ["#1a1a1a", "#2d2d2d"], accent: "#f5a08c", type: "waves" },
+    { id: 11, title: { ru: "Инвест-дек", en: "Investor Deck" }, cat: "deck", year: 2024, catLabel: { ru: "Презентация", en: "Deck" }, grad: ["#0a1a0a", "#1a3a1a"], accent: "#a8e8a0", type: "bars" },
+    { id: 12, title: { ru: "HEIC Converter", en: "HEIC Converter" }, cat: "app", year: 2024, catLabel: { ru: "Утилита", en: "Utility" }, grad: ["#1a1a0a", "#3a3a1a"], accent: "#e8d854", type: "pixels" }
+  ];
+
+  function generateSVG(p) {
+    const { grad, accent, type } = p;
+    const defs = `<defs>
+      <linearGradient id="pg${p.id}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${grad[0]}"/>
+        <stop offset="100%" stop-color="${grad[1]}"/>
+      </linearGradient>
+      <radialGradient id="pga${p.id}">
+        <stop offset="0%" stop-color="${accent}" stop-opacity="0.4"/>
+        <stop offset="100%" stop-color="${accent}" stop-opacity="0"/>
+      </radialGradient>
+    </defs>`;
+    let body = `<rect width="400" height="500" fill="url(#pg${p.id})"/>`;
+
+    if (type === 'circuit') {
+      body += `<circle cx="280" cy="180" r="180" fill="url(#pga${p.id})"/>
+        <g stroke="${accent}" stroke-width="0.5" fill="none" opacity="0.6">
+          <path d="M 50 200 L 150 200 L 150 250 L 250 250 L 250 180 L 350 180"/>
+          <path d="M 50 320 L 120 320 L 120 380 L 280 380"/>
+          <circle cx="150" cy="250" r="4" fill="${accent}"/>
+          <circle cx="250" cy="180" r="4" fill="${accent}"/>
+          <circle cx="280" cy="380" r="4" fill="${accent}"/>
+        </g>`;
+    } else if (type === 'frame') {
+      body += `<rect x="40" y="80" width="320" height="340" fill="none" stroke="#f4f0e8" stroke-width="0.5" opacity="0.4"/>
+        <rect x="60" y="120" width="280" height="260" fill="${grad[0]}" opacity="0.8"/>
+        <circle cx="200" cy="250" r="60" fill="${accent}" opacity="0.5"/>
+        <text x="200" y="450" text-anchor="middle" fill="#f4f0e8" font-family="Fraunces" font-size="11" opacity="0.6" letter-spacing="3">SCENE 07 · TAKE 2</text>`;
+    } else if (type === 'dust') {
+      body += `<circle cx="200" cy="250" r="200" fill="url(#pga${p.id})"/>
+        ${Array.from({length: 40}, (_, i) => `<circle cx="${Math.random()*400}" cy="${Math.random()*500}" r="${Math.random()*2+0.5}" fill="${accent}" opacity="${Math.random()*0.6+0.2}"/>`).join('')}`;
+    } else if (type === 'bubble') {
+      body += `${Array.from({length: 15}, (_, i) => {
+        const r = Math.random()*50+20;
+        return `<circle cx="${Math.random()*400}" cy="${Math.random()*500}" r="${r}" fill="none" stroke="${accent}" stroke-width="0.8" opacity="${Math.random()*0.5+0.2}"/>`;
+      }).join('')}`;
+    } else if (type === 'splash') {
+      body += `<circle cx="200" cy="250" r="200" fill="url(#pga${p.id})"/>
+        ${Array.from({length: 12}, (_, i) => {
+          const a = (i/12)*Math.PI*2;
+          const x1 = 200+Math.cos(a)*60, y1 = 250+Math.sin(a)*60;
+          const x2 = 200+Math.cos(a)*(100+Math.random()*80), y2 = 250+Math.sin(a)*(100+Math.random()*80);
+          return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${accent}" stroke-width="1.5" opacity="0.7" stroke-linecap="round"/>`;
+        }).join('')}
+        <circle cx="200" cy="250" r="40" fill="${accent}" opacity="0.8"/>`;
+    } else if (type === 'chart') {
+      body += `<g transform="translate(60 100)">
+        ${[160,200,140,240,180,260,200].map((h,i) => `<rect x="${i*40}" y="${280-h}" width="24" height="${h}" fill="${accent}" opacity="${0.4+i*0.08}"/>`).join('')}
+      </g>
+      <line x1="40" y1="380" x2="360" y2="380" stroke="#f4f0e8" stroke-width="0.5" opacity="0.3"/>`;
+    } else if (type === 'grid') {
+      body += `<g stroke="${accent}" stroke-width="0.5" opacity="0.4">
+        ${Array.from({length: 20}, (_, i) => `<line x1="${i*22}" y1="0" x2="${i*22}" y2="500"/>`).join('')}
+        ${Array.from({length: 25}, (_, i) => `<line x1="0" y1="${i*22}" x2="400" y2="${i*22}"/>`).join('')}
+      </g>
+      <rect x="100" y="180" width="200" height="140" fill="${accent}" opacity="0.15" stroke="${accent}" stroke-width="1"/>`;
+    } else if (type === 'layers') {
+      body += `${[0,1,2,3].map(i => `<rect x="${60+i*12}" y="${100+i*20}" width="260" height="200" fill="${accent}" opacity="${0.15+i*0.08}" stroke="${accent}" stroke-width="0.5"/>`).join('')}`;
+    } else if (type === 'stars') {
+      body += `<circle cx="200" cy="250" r="150" fill="url(#pga${p.id})"/>
+        ${Array.from({length: 60}, () => {
+          const x = Math.random()*400, y = Math.random()*500, s = Math.random()*2+0.5;
+          return `<circle cx="${x}" cy="${y}" r="${s}" fill="${accent}" opacity="${Math.random()*0.8+0.2}"/>`;
+        }).join('')}`;
+    } else if (type === 'waves') {
+      body += `<g stroke="${accent}" fill="none" stroke-width="1" opacity="0.6">
+        ${Array.from({length: 8}, (_, i) => `<path d="M 0 ${150+i*40} Q 100 ${120+i*40} 200 ${150+i*40} T 400 ${150+i*40}"/>`).join('')}
+      </g>`;
+    } else if (type === 'bars') {
+      body += `<g transform="translate(50 150)">
+        ${[80,140,100,180,120,200,160,130].map((h,i) => `<rect x="${i*38}" y="${220-h}" width="28" height="${h}" fill="${accent}" opacity="0.7"/>`).join('')}
+      </g>`;
+    } else if (type === 'pixels') {
+      body += `<g>
+        ${Array.from({length: 120}, (_, i) => {
+          const col = i%12, row = Math.floor(i/12);
+          const op = Math.random();
+          return `<rect x="${60+col*24}" y="${100+row*24}" width="22" height="22" fill="${accent}" opacity="${op*0.6}"/>`;
+        }).join('')}
+      </g>`;
+    }
+
+    return `<svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">${defs}${body}</svg>`;
+  }
+
+  /* ============================================
+     STATE & RENDER
+     ============================================ */
+  let currentLang = 'ru';
+  let currentFilter = 'all';
+  let currentPage = 'home';
+  let currentTheme = 'dark';
+
+  function applyTheme(theme) {
+    currentTheme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+
+  function applyLang(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    const dict = translations[lang];
+    document.querySelectorAll('[data-t]').forEach(el => {
+      const key = el.getAttribute('data-t');
+      if (dict[key] !== undefined) el.textContent = dict[key];
+    });
+    document.querySelectorAll('.lang-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.lang === lang);
+    });
+    renderProjects();
+  }
+
+  function renderProjects() {
+    const grid = document.getElementById('projectsGrid');
+    if (!grid) return;
+    const filtered = projects.filter(p => currentFilter === 'all' || p.cat === currentFilter);
+    document.getElementById('filterCount').textContent = filtered.length;
+    grid.innerHTML = filtered.map((p, idx) => `
+      <article class="project-tile reveal" style="transition-delay: ${idx * 60}ms">
+        <div class="project-tile-visual">${generateSVG(p)}</div>
+        <div class="project-tile-meta">
+          <div>
+            <h3 class="project-tile-title">${p.title[currentLang]}</h3>
+            <span class="project-tile-cat">${p.catLabel[currentLang]}</span>
+          </div>
+          <span class="project-tile-year">${p.year}</span>
+        </div>
+      </article>
+    `).join('');
+
+    // Observe new tiles
+    setTimeout(() => {
+      document.querySelectorAll('#projectsGrid .reveal').forEach(el => {
+        el.classList.add('visible');
+      });
+    }, 50);
+  }
+
+  function navigate(page) {
+    if (currentPage === page) return;
+    currentPage = page;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.querySelectorAll('.nav-link').forEach(l => {
+      l.classList.toggle('active', l.dataset.page === page);
+    });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    observeReveals();
+    if (page === 'projects') renderProjects();
+    // close mobile menu
+    document.getElementById('navMenu').classList.remove('open');
+    document.getElementById('menuToggle').classList.remove('open');
+  }
+
+  /* ============================================
+     EVENT BINDING
+     ============================================ */
+  document.addEventListener('click', (e) => {
+    const pageLink = e.target.closest('[data-page]');
+    if (pageLink) {
+      e.preventDefault();
+      navigate(pageLink.dataset.page);
+    }
+    const langBtn = e.target.closest('.lang-btn');
+    if (langBtn) applyLang(langBtn.dataset.lang);
+
+    const themeBtn = e.target.closest('#themeToggle');
+    if (themeBtn) applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+
+    const filterBtn = e.target.closest('.filter-btn');
+    if (filterBtn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      filterBtn.classList.add('active');
+      currentFilter = filterBtn.dataset.filter;
+      renderProjects();
+    }
+
+    const tagCheck = e.target.closest('.tag-check');
+    if (tagCheck) tagCheck.classList.toggle('selected');
+
+    const menuToggle = e.target.closest('#menuToggle');
+    if (menuToggle) {
+      document.getElementById('navMenu').classList.toggle('open');
+      menuToggle.classList.toggle('open');
+    }
+  });
+
+  document.getElementById('contactForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('.form-submit');
+    const orig = btn.textContent;
+    btn.textContent = currentLang === 'ru' ? 'Отправлено ✓' : 'Sent ✓';
+    btn.style.background = 'var(--accent)';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.background = '';
+      e.target.reset();
+      document.querySelectorAll('.tag-check').forEach(t => t.classList.remove('selected'));
+    }, 2400);
+  });
+
+  /* ============================================
+     REVEAL ON SCROLL
+     ============================================ */
+  let observer;
+  function observeReveals() {
+    if (observer) observer.disconnect();
+    observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -50px 0px' });
+    document.querySelectorAll('.reveal:not(.visible)').forEach(el => observer.observe(el));
+  }
+
+  /* ============================================
+     NAV HIDE ON SCROLL DOWN
+     ============================================ */
+  let lastScroll = 0;
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('nav');
+    const s = window.scrollY;
+    if (s > 100 && s > lastScroll) nav.style.transform = 'translateY(-100%)';
+    else nav.style.transform = 'translateY(0)';
+    lastScroll = s;
+  });
+
+  /* ============================================
+     INIT
+     ============================================ */
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.getElementById('loader').classList.add('hidden');
+    }, 900);
+    applyTheme('dark');
+    applyLang('ru');
+    renderProjects();
+    observeReveals();
+  });
+</script>
+</body>
+</html>
