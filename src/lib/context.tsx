@@ -1,0 +1,38 @@
+'use client'
+import { createContext, useContext, useState, ReactNode } from 'react'
+import { Lang, translations } from '@/lib/data'
+
+type Theme = 'dark' | 'light'
+
+interface AppContextType {
+  lang: Lang
+  setLang: (l: Lang) => void
+  t: (key: string) => string
+  theme: Theme
+  toggleTheme: () => void
+}
+
+const AppContext = createContext<AppContextType | null>(null)
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [lang, setLangState] = useState<Lang>('ru')
+  const [theme, setTheme] = useState<Theme>('dark')
+
+  const setLang = (l: Lang) => setLangState(l)
+  const t = (key: string) => translations[lang][key] ?? key
+  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark')
+
+  return (
+    <AppContext.Provider value={{ lang, setLang, t, theme, toggleTheme }}>
+      <div data-theme={theme} style={{ minHeight: '100vh' }}>
+        {children}
+      </div>
+    </AppContext.Provider>
+  )
+}
+
+export function useApp() {
+  const ctx = useContext(AppContext)
+  if (!ctx) throw new Error('useApp must be used within AppProvider')
+  return ctx
+}
